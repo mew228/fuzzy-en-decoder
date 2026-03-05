@@ -23,14 +23,9 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 # Copy application code
 COPY . .
 
-# Railway injects PORT env variable
+# Railway injects PORT env variable at runtime
 ENV PORT=8080
 EXPOSE 8080
 
-# Single worker (TF is memory-heavy), 120s timeout for training requests
-CMD gunicorn main:app \
-    --worker-class uvicorn.workers.UvicornWorker \
-    --workers 1 \
-    --bind 0.0.0.0:$PORT \
-    --timeout 120 \
-    --graceful-timeout 30
+# MUST use shell form (not exec form) so $PORT expands correctly
+CMD uvicorn main:app --host 0.0.0.0 --port $PORT --workers 1 --timeout-keep-alive 120
